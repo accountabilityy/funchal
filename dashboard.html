@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Codystar:wght@300;400&family=Italiana&family=Major+Mono+Display&family=Moirai+One&family=Monoton&family=Mulish&display=swap" rel="stylesheet">
+  <title>2026 Accountability | Dashboard</title>
+</head>
+
+<body class="dashboard-page">
+<header><a href="index.html">2026 Accountability</a></header>
+<nav>
+  <ul class="nav-ul nav-link">
+    <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover" href="march.html">Current Month</a></li>
+    <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover" href="q1.html">Current Quarter</a></li>
+    <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover" href="leaderboard.html">Leaderboard</a></li>
+    <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover active" href="dashboard.html">Dashboard</a></li>
+  </ul>
+</nav>
+
+<main>
+  <div id="app"><div class="state-msg">Loading…</div></div>
+</main>
+
+<footer>
+  © 2026 Casey Verde ☆
+  <a href="https://github.com/accountabilityy/funchal">Accountability</a> ☆
+  <a href="https://github.com/accountabilityy/diy">DIY</a>
+</footer>
+
+<script src="config.js"></script>
+<script src="dashboard.js"></script>
+<script>
+const CONFIG = window.DASHBOARD_CONFIG;
+if (!CONFIG) {
+  throw new Error('Missing dashboard config: config.js');
+}
+if (!window.DashboardData) {
+  throw new Error('Missing dashboard data helpers: dashboard.js');
+}
+
+const app = document.getElementById('app');
+
+// ── URL helpers ────────────────────────────────────────────────────
+function getParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+function setParam(key, value) {
+  const url = new URL(window.location.href);
+  url.searchParams.set(key, value);
+  window.history.pushState({}, '', url);
+}
+
+function badgeHTML(type, rawText) {
+  const map = {
+    success: ['badge-success', '✅ accomplished'],
+    fail:    ['badge-fail',    '❌ not accomplished'],
+    partial: ['badge-partial', '🔀 partly'],
+    pending: ['badge-pending', 'no result yet'],
+  };
+  const [cls, label] = map[type] || map.pending;
+  // If the raw result text is long, use the short label; otherwise show it
+  const display = rawText && rawText.length < 40 ? rawText : label;
+  return `<span class="badge ${cls}" title="${rawText || ''}">${display}</span>`;
+}
+
+// ── Build Google Form URL ─────────────────────────────────────────
+function formUrl(month) {
+  return month.formUrl;
+}
+
+function getCurrentMonthConfig(months) {
+  const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  const parsed = (months || []).map(m => {
+    const match = String(m?.key || '').toLowerCase().match(/^([a-z]+)_(\d{4})$/);
+    const month = match ? monthNames.indexOf(match[1]) : -1;
+    return month < 0 ? null : { cfg: m, score: Number(match[2]) * 12 + month };
+  }).filter(Boolean).sort((a, b) => a.score - b.score);
+
+  if (!parsed.length) return null;
+
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth() + (now.getDate() >= 8 ? 1 : 0), 1);
+  const targetScore = target.getFullYear() * 12 + target.getMonth();
+  const chosen = parsed.find(p => p.score >= targetScore) || parsed[parsed.length - 1];
+  return chosen.cfg;
+}
+
+// ── Members overview ───────────────────────────────────────────
+function renderPicker() {
+  document.title = '2026 Accountability | Dashboard';
+  app.innerHTML = `
+    <div class="picker-intro">
+      <h1>My Dashboard</h1>
+      <p>Select your name to see your goals and progress.</p>
+    </div>
+    <div class="name-grid">
+      ${CONFIG.members.map(n =>
+        `<button class="name-btn" onclick="selectName('${n}')">${n}</button>`
+      ).join('')}
+    </div>
+  `;
+}
+
+function selectName(name) {
+  setParam('name', name);
+  renderDashboard(name);
+}
+
+// ── Render: user dashboard ────────────────────────────────────────
+async function renderDashboard(name) {
+  document.title = `2026 Accountability | Dashboard`;
+
+  const currentCfg = getCurrentMonthConfig(CONFIG.months) || CONFIG.months[CONFIG.months.length - 1];
+
+  app.innerHTML = `
+    <a href="dashboard.html" class="dash-back">← All members</a>
+    <div class="dash-header">
+      <h1>${name}'s Goals & progress</h1>
+    </div>
+    <div id="cards"><div class="state-msg">Fetching your data…</div></div>
+  `;
+
+  // Fetch all months in parallel
+  const fetched = await Promise.all(
+    CONFIG.months.map(async m => {
+      const sheetOrError = await window.DashboardData.fetchSheet(CONFIG, m);
+      if (sheetOrError && sheetOrError.skipped) {
+        return {
+          month: m,
+          data: null,
+          fetchError: null
+        };
+      }
+      if (sheetOrError && sheetOrError.error) {
+        return {
+          month: m,
+          data: null,
+          fetchError: `${m.label}: ${sheetOrError.error}`
+        };
+      }
+      return {
+        month: m,
+        data: window.DashboardData.extractUserData(CONFIG, sheetOrError, name, m.label),
+        fetchError: null
+      };
+    })
+  );
+
+  // Only months where the user has data
+  const withData = fetched.filter(f =>
+    f.data && (
+      f.data.monthGoals.length || f.data.qGoals.length || f.data.monthlyStatus || f.data.quarterlyStatus
+    )
+  ).reverse(); // newest first
+
+  const cardsEl = document.getElementById('cards');
+  const fetchErrors = fetched.filter(f => f.fetchError).map(f => f.fetchError);
+  const summary = window.DashboardData.summariseStatuses(withData);
+  const updatedAt = new Date().toLocaleString();
+  const ctaHtml = `
+    <div class="cta-card">
+      <div class="cta-text">
+        <h3>Ready for ${currentCfg.label}?</h3>
+      </div>
+      <a class="cta-btn" href="${formUrl(currentCfg)}" target="_blank" rel="noopener">
+        ${currentCfg.label} Goals →
+      </a>
+    </div>
+  `;
+
+  if (!withData.length) {
+    const authHint = fetchErrors.length
+      ? `<br><br><small>Data fetch issue: ${fetchErrors[0]}${fetchErrors.length > 1 ? ' (and others)' : ''}.<br>If you open via file://, use a local server or rely on the built-in gviz fallback.</small>`
+      : '';
+    cardsEl.innerHTML = `<div class="updated-at">Last updated: ${updatedAt}</div>${ctaHtml}<div class="state-msg">No submissions found yet for ${name}.<br>Fill in this month's form to get started!${authHint}</div>`;
+  } else {
+    const summaryHtml = `
+      ${ctaHtml}
+      <div class="summary-strip">
+        <span class="summary-label">Status summary</span>
+        ${badgeHTML('success', `${summary.success} on track`)}
+        ${badgeHTML('partial', `${summary.partial} partial`)}
+        ${badgeHTML('fail', `${summary.fail} off track`)}
+        ${badgeHTML('pending', `${summary.pending} pending`)}
+      </div>
+      <div class="updated-at">Last updated: ${updatedAt}</div>
+
+    `;
+    cardsEl.innerHTML = summaryHtml + withData.map(({ month, data }) => {
+      const resultType = data.monthlyStatus ? window.DashboardData.categoriseResult(data.monthlyStatus) : 'pending';
+      const hasQ = data.qGoals.length > 0;
+      const hasMonthlyBlock = data.monthGoals.length || data.monthlyStatus;
+      const hasQuarterlyBlock = hasQ || data.quarterlyStatus;
+      const quarterlyResultType = data.quarterlyStatus ? window.DashboardData.categoriseResult(data.quarterlyStatus) : 'pending';
+
+      return `
+        <div class="month-card">
+          <div class="card-top">
+            <span class="month-label">${month.label}</span>
+          </div>
+
+          ${hasMonthlyBlock ? `
+            <div class="section-head">
+              <div class="section-label">Monthly goals</div>
+              ${badgeHTML(resultType, data.monthlyStatus || null)}
+            </div>
+            ${data.monthGoals.length ? `
+            <ul class="goals-list">
+              ${data.monthGoals.map(g => `<li>${g}</li>`).join('')}
+            </ul>
+            ` : ''}
+          ` : ''}
+
+          ${hasQuarterlyBlock ? `
+            <div class="section-head">
+              <div class="section-label">Quarterly goals</div>
+              ${badgeHTML(quarterlyResultType, data.quarterlyStatus || null)}
+            </div>
+            ${hasQ ? `
+            <ul class="goals-list">
+              ${data.qGoals.map(g => `<li>${g.value}</li>`).join('')}
+            </ul>
+            ` : ''}
+          ` : ''}
+
+          <div class="month-actions">
+            <a class="month-action-btn" href="${formUrl(month)}" target="_blank" rel="noopener">
+              Edit month's form
+            </a>
+          </div>
+
+        </div>
+      `;
+    }).join('');
+  }
+
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+const nameParam = getParam('name');
+if (nameParam && CONFIG.members.some(m => m.toLowerCase() === nameParam.toLowerCase())) {
+  renderDashboard(
+    CONFIG.members.find(m => m.toLowerCase() === nameParam.toLowerCase())
+  );
+} else {
+  renderPicker();
+}
+</script>
+
+</body>
+</html>
