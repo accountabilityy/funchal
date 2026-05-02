@@ -64,8 +64,53 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
-function goalRowHTML(text) {
-  return `<li class="goals-list-item"><button type="button" class="goal-toggle" aria-pressed="false" aria-label="Mark goal done"></button><span class="goal-text">${escapeHtml(text)}</span></li>`;
+const GOAL_STORE_PREFIX = 'accDashGoals:v1:';
+
+function slugDashUser(name) {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '') || 'anon';
+}
+
+function readGoalStore(name) {
+  try {
+    const raw = localStorage.getItem(GOAL_STORE_PREFIX + slugDashUser(name));
+    const o = raw ? JSON.parse(raw) : {};
+    return o && typeof o === 'object' ? o : {};
+  } catch {
+    return {};
+  }
+}
+
+function getGoalDone(name, monthKey, kind, index) {
+  const store = readGoalStore(name);
+  const bucket = store[monthKey];
+  const arr = bucket && bucket[kind];
+  return !!(arr && arr[index]);
+}
+
+function setGoalDone(name, monthKey, kind, index, done) {
+  const store = readGoalStore(name);
+  if (!store[monthKey]) store[monthKey] = { m: [], q: [] };
+  if (!store[monthKey][kind]) store[monthKey][kind] = [];
+  const arr = store[monthKey][kind].slice();
+  while (arr.length <= index) arr.push(false);
+  arr[index] = done;
+  store[monthKey][kind] = arr;
+  try {
+    localStorage.setItem(GOAL_STORE_PREFIX + slugDashUser(name), JSON.stringify(store));
+  } catch (e) {
+    console.warn('[dashboard] Could not save goal checkmarks', e);
+  }
+}
+
+function goalRowHTML(text, name, monthKey, kind, index) {
+  const done = getGoalDone(name, monthKey, kind, index);
+  const pressed = done ? 'true' : 'false';
+  const mk = escapeHtml(String(monthKey || ''));
+  return `<li class="goals-list-item"><button type="button" class="goal-toggle" aria-pressed="${pressed}" aria-label="Mark goal done" data-goal-month="${mk}" data-goal-kind="${kind}" data-goal-index="${index}"></button><span class="goal-text">${escapeHtml(text)}</span></li>`;
 }
 
 function badgeHTML(type, rawText) {
@@ -112,7 +157,7 @@ function getCurrentMonthConfig(months) {
 
 // ── Members overview ───────────────────────────────────────────
 function renderPicker() {
-  document.title = '2026 Accountability | Dashboard';
+  document.title = '2026 Accountability - Dashboard';
   app.innerHTML = `
     <div class="picker-intro">
       <h1>My Dashboard</h1>
@@ -133,7 +178,7 @@ function selectName(name) {
 
 // ── Render: user dashboard ────────────────────────────────────────
 async function renderDashboard(name) {
-  document.title = `2026 Accountability | Dashboard`;
+  document.title = `2026 Accountability - Dashboard`;
 
   const currentCfg = getCurrentMonthConfig(CONFIG.months) || CONFIG.months[CONFIG.months.length - 1];
 
@@ -231,7 +276,7 @@ async function renderDashboard(name) {
             </div>
             ${data.monthGoals.length ? `
             <ul class="goals-list">
-              ${data.monthGoals.map(g => goalRowHTML(g)).join('')}
+              ${data.monthGoals.map((g, i) => goalRowHTML(g, name, month.key, 'm', i)).join('')}
             </ul>
             ` : ''}
           ` : ''}
@@ -243,7 +288,7 @@ async function renderDashboard(name) {
             </div>
             ${hasQ ? `
             <ul class="goals-list">
-              ${data.qGoals.map(g => goalRowHTML(g.value)).join('')}
+              ${data.qGoals.map((g, i) => goalRowHTML(g.value, name, month.key, 'q', i)).join('')}
             </ul>
             ` : ''}
           ` : ''}
@@ -261,14 +306,25 @@ async function renderDashboard(name) {
 
 }
 
-// Goal completed toggle
+// Goal completed toggle (persisted per user in localStorage)
 document.querySelector('main').addEventListener('click', (e) => {
   const btn = e.target.closest('.goal-toggle');
   if (!btn) return;
   const appEl = document.getElementById('app');
   if (!appEl || !appEl.contains(btn)) return;
+  const dashName = getParam('name');
+  if (!dashName) return;
+  const memberName = CONFIG.members.find(m => m.toLowerCase() === dashName.toLowerCase()) || dashName;
+  const monthKey = btn.getAttribute('data-goal-month');
+  const kind = btn.getAttribute('data-goal-kind');
+  const indexStr = btn.getAttribute('data-goal-index');
+  if (!monthKey || (kind !== 'm' && kind !== 'q') || indexStr == null) return;
+  const index = Number(indexStr);
+  if (!Number.isFinite(index) || index < 0) return;
   const next = btn.getAttribute('aria-pressed') === 'true' ? 'false' : 'true';
+  const done = next === 'true';
   btn.setAttribute('aria-pressed', next);
+  setGoalDone(memberName, monthKey, kind, index, done);
 });
 
 // ── Init ──────────────────────────────────────────────────────────

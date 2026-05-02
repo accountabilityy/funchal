@@ -360,19 +360,10 @@ main {
     display: flex;
     flex-direction: column;
     gap: .18rem;
-    padding: 0rem 0.5rem 0.5rem 0.5rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
     box-sizing: border-box;
   }
   
-  .goals-list-item {
-    display: flex;
-    align-items: flex-start;
-    font-size: .93rem;
-    padding: 0rem 0 .28rem 0rem;
-    border-bottom: 1px solid var(--card-border);
-    position: relative;
-  }
-
   .goal-text {
     flex: 1;
     min-width: 0;

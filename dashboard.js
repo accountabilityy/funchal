@@ -106,33 +106,6 @@
     });
   }
 
-  function parseCSV(raw) {
-    var rows = [];
-    var row = [];
-    var cell = "";
-    var inQ = false;
-    for (var i = 0; i < raw.length; i++) {
-      var c = raw[i];
-      if (c === '"') {
-        if (inQ && raw[i + 1] === '"') { cell += '"'; i++; }
-        else inQ = !inQ;
-      } else if (c === "," && !inQ) {
-        row.push(cell.trim());
-        cell = "";
-      } else if ((c === "\n" || c === "\r") && !inQ) {
-        if (c === "\r" && raw[i + 1] === "\n") i++;
-        row.push(cell.trim());
-        cell = "";
-        if (row.some(Boolean)) rows.push(row);
-        row = [];
-      } else {
-        cell += c;
-      }
-    }
-    if (row.some(Boolean)) rows.push(row);
-    return rows;
-  }
-
   async function fetchSheet(config, month) {
     var hasGid = month.gid && String(month.gid).indexOf("YOUR_") === -1;
     if (!hasGid) return { rows: null, skipped: true };
@@ -145,20 +118,7 @@
       }
     };
 
-    if (window.location.protocol === "file:") {
-      return tryJsonp("gviz jsonp failed");
-    }
-
-    var url = "https://docs.google.com/spreadsheets/d/" + config.sheetId + "/export?format=csv&gid=" + encodeURIComponent(month.gid);
-    try {
-      var res = await fetch(url);
-      if (!res.ok) return { rows: null, error: "HTTP " + res.status };
-      var text = await res.text();
-      if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
-      return parseCSV(text);
-    } catch {
-      return tryJsonp("network error");
-    }
+    return tryJsonp("gviz jsonp failed");
   }
 
   function extractUserData(config, rows, name, monthLabel) {
