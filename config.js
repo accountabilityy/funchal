@@ -18,7 +18,7 @@ window.DASHBOARD_CONFIG = {
   months: [
     {
       key: 'january_2026',
-      label: 'January_2026',
+      label: 'January 2026',
       gid: '572315938',
       formUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSfCBXMoDVljjWYbt0je6q6f-ErFSDYgrsSdyvnOH2ECPNTZNg/viewform',
     },
