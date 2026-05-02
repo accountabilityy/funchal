@@ -153,7 +153,9 @@
     try {
       var res = await fetch(url);
       if (!res.ok) return { rows: null, error: "HTTP " + res.status };
-      return parseCSV(await res.text());
+      var text = await res.text();
+      if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+      return parseCSV(text);
     } catch {
       return tryJsonp("network error");
     }
@@ -177,8 +179,10 @@
     var candidateRows = rows.slice(1).filter(function (r) {
       return variants.has(normaliseName(r[nameCol] || ""));
     });
-    var userRow = candidateRows[candidateRows.length - 1];
-    if (!userRow) return null;
+    var rawUserRow = candidateRows[candidateRows.length - 1];
+    if (!rawUserRow) return null;
+    var userRow = rawUserRow.slice();
+    while (userRow.length < headers.length) userRow.push("");
 
     var monthGoals = [];
     var qGoals = [];
@@ -191,9 +195,8 @@
       if (!val) return;
 
       var isQuarterlyContext = matchesAny(h, patterns.quarterlyStatus);
-      if (matchesAny(h, patterns.monthlyStatus)) {
-        if (isQuarterlyContext) quarterlyStatus = val;
-        else monthlyStatus = val;
+
+      if (i === nameCol || matchesAny(h, patterns.skipColumns)) {
         return;
       }
       if (matchesAny(h, patterns.quarterlyGoals)) {
@@ -204,10 +207,9 @@
         monthGoals.push(val);
         return;
       }
-      if (
-        i === nameCol ||
-        matchesAny(h, patterns.skipColumns)
-      ) {
+      if (matchesAny(h, patterns.monthlyStatus)) {
+        if (isQuarterlyContext) quarterlyStatus = val;
+        else monthlyStatus = val;
         return;
       }
       unknownNonEmpty.push(headersOriginal[i] || h);
@@ -227,7 +229,9 @@
 
   function categoriseResult(text) {
     if (!text) return "pending";
-    var t = String(text).toLowerCase();
+    var t = String(text).toLowerCase().trim();
+    if (t === "yes") return "success";
+    if (t === "no") return "fail";
     if (/\byes\b|✅|accomplished|fully|100|on track/.test(t)) return "success";
     if (/^no(?:\b|[\s:;,.!?()\-])|❌|not accomplished|failed|0%|off track/.test(t)) return "fail";
     return "partial";

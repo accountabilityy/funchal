@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Codystar:wght@300;400&family=Italiana&family=Major+Mono+Display&family=Moirai+One&family=Monoton&family=Mulish&display=swap" rel="stylesheet">
-  <title>2026 Accountability | Dashboard</title>
+  <title>2026 Accountability - Dashboard</title>
 </head>
 
 <body class="dashboard-page">
@@ -56,6 +56,18 @@ function setParam(key, value) {
   window.history.pushState({}, '', url);
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function goalRowHTML(text) {
+  return `<li class="goals-list-item"><button type="button" class="goal-toggle" aria-pressed="false" aria-label="Mark goal done"></button><span class="goal-text">${escapeHtml(text)}</span></li>`;
+}
+
 function badgeHTML(type, rawText) {
   const map = {
     success: ['badge-success', '✅ accomplished'],
@@ -64,9 +76,16 @@ function badgeHTML(type, rawText) {
     pending: ['badge-pending', 'no result yet'],
   };
   const [cls, label] = map[type] || map.pending;
-  // If the raw result text is long, use the short label; otherwise show it
+  const t = String(rawText || '').trim().toLowerCase();
+  const title = escapeHtml(String(rawText || ''));
+  if (type === 'success' && t === 'yes') {
+    return `<span class="badge ${cls}" title="${title}">On track</span>`;
+  }
+  if (type === 'fail' && t === 'no') {
+    return `<span class="badge ${cls}" title="${title}">Off track</span>`;
+  }
   const display = rawText && rawText.length < 40 ? rawText : label;
-  return `<span class="badge ${cls}" title="${rawText || ''}">${display}</span>`;
+  return `<span class="badge ${cls}" title="${title}">${escapeHtml(String(display))}</span>`;
 }
 
 // ── Build Google Form URL ─────────────────────────────────────────
@@ -121,7 +140,7 @@ async function renderDashboard(name) {
   app.innerHTML = `
     <a href="dashboard.html" class="dash-back">← All members</a>
     <div class="dash-header">
-      <h1>${name}'s Goals & progress</h1>
+      <h1>${name}'s goals & progress</h1>
     </div>
     <div id="cards"><div class="state-msg">Fetching your data…</div></div>
   `;
@@ -212,7 +231,7 @@ async function renderDashboard(name) {
             </div>
             ${data.monthGoals.length ? `
             <ul class="goals-list">
-              ${data.monthGoals.map(g => `<li>${g}</li>`).join('')}
+              ${data.monthGoals.map(g => goalRowHTML(g)).join('')}
             </ul>
             ` : ''}
           ` : ''}
@@ -224,7 +243,7 @@ async function renderDashboard(name) {
             </div>
             ${hasQ ? `
             <ul class="goals-list">
-              ${data.qGoals.map(g => `<li>${g.value}</li>`).join('')}
+              ${data.qGoals.map(g => goalRowHTML(g.value)).join('')}
             </ul>
             ` : ''}
           ` : ''}
@@ -241,6 +260,16 @@ async function renderDashboard(name) {
   }
 
 }
+
+// Goal completed toggle
+document.querySelector('main').addEventListener('click', (e) => {
+  const btn = e.target.closest('.goal-toggle');
+  if (!btn) return;
+  const appEl = document.getElementById('app');
+  if (!appEl || !appEl.contains(btn)) return;
+  const next = btn.getAttribute('aria-pressed') === 'true' ? 'false' : 'true';
+  btn.setAttribute('aria-pressed', next);
+});
 
 // ── Init ──────────────────────────────────────────────────────────
 const nameParam = getParam('name');

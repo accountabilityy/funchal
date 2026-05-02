@@ -49,7 +49,7 @@ main {
 
 header {
   text-align: center;
-  padding: 1.4rem 1rem 0.4rem;
+  padding: 1.4rem 1rem 0.95rem;
   view-transition-name: site-header;
 }
 
@@ -131,9 +131,11 @@ nav ul li a:hover {
 }
 
 article {
+  box-sizing: border-box;
   border: 15px solid var(--vw-accent-medium);
   border-radius: 50px;
   width: 100%;
+  max-width: 100%;
   margin: 1.5rem 0;
   padding: 10px;
   box-shadow: 15px 15px 20px var(--vw-accent-dark);
@@ -148,8 +150,9 @@ footer {
   color: white;
   text-decoration: none;
   margin: 0;
-  padding: 20px 10px;
+  padding: 20px 1rem;
   text-align: center;
+  box-sizing: border-box;
 }
 
 header, main, footer {
@@ -209,6 +212,11 @@ table {
   width: 99%;
 }
 
+.leaderboard-scroll {
+  margin: 0;
+  width: 100%;
+}
+
 table.leaderboard-fixed {
   table-layout: fixed;
   margin: 10px;
@@ -241,7 +249,9 @@ caption {
 }
 
 table.leaderboard-fixed caption {
-  font-size: 1.85rem;
+  font-size: 1.25em;
+  font-weight: bold;
+  color: var(--vw-text);
 }
 
 table.leaderboard-fixed th {
@@ -341,4 +351,74 @@ article ol a:hover, article ul a:hover {
   font-weight: bold;
 	font-size: 1.5em;
   margin-bottom: 3rem;
+}
+
+/* —— Mobile (plan: wrap nav, wider main, lighter articles, leaderboard scroll) —— */
+@media (max-width: 768px) {
+  nav ul {
+    flex-wrap: wrap;
+    gap: 0.15rem 0.35rem;
+    row-gap: 0;
+  }
+
+  nav ul li a {
+    padding: 12px 14px;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 1.8rem 1.8rem 3.5rem;
+    box-sizing: border-box;
+  }
+
+  footer {
+    padding: 20px 1.8rem;
+  }
+
+  article {
+    border-width: 8px;
+    border-radius: 28px;
+    box-shadow: 6px 6px 14px var(--vw-accent-dark);
+    margin-left: auto;
+    margin-right: auto;
+    overflow-wrap: anywhere;
+  }
+
+  main article div {
+    margin: 0.75rem 0;
+  }
+
+  .leaderboard-scroll {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin: 0;
+    /* Inline padding: room so first/last columns stay visible at scroll extremes */
+    padding-inline: 6px 14px;
+    overscroll-behavior-x: contain;
+  }
+
+  .leaderboard-scroll table.leaderboard-fixed {
+    width: max-content;
+    min-width: 44rem;
+    table-layout: auto;
+    margin: 8px 0;
+  }
+
+  .leaderboard-scroll table.leaderboard-fixed th:first-child,
+  .leaderboard-scroll table.leaderboard-fixed td:first-child {
+    width: auto;
+    min-width: 6.5rem;
+  }
+
+  .leaderboard-scroll table.leaderboard-fixed th,
+  .leaderboard-scroll table.leaderboard-fixed td {
+    width: auto;
+    min-width: 2.35rem;
+  }
 }

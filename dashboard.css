@@ -141,6 +141,11 @@ main {
   font-size: 1.4rem;
 }
 
+.month-card .month-label {
+  padding-left: 1rem;
+  box-sizing: border-box;
+}
+
 .badge {
   font-size: .78rem;
   font-weight: 600;
@@ -161,10 +166,11 @@ main {
   letter-spacing: .07em;
   color: var(--text-muted);
   margin: .7rem 0 .3rem;
+  padding-left: 1rem;
+  box-sizing: border-box;
 }
 
 .section-label:first-of-type { margin-top: 0; }
-
 .section-head {
   display: flex;
   align-items: center;
@@ -178,23 +184,68 @@ main {
   display: flex;
   flex-direction: column;
   gap: .18rem;
+  padding-left: 2rem;
+  box-sizing: border-box;
 }
 
-.goals-list li {
+.goals-list .goals-list-item {
+  display: flex;
+  align-items: flex-start;
   font-size: .93rem;
-  padding: .28rem 0 .28rem 1rem;
+  padding: .28rem 0 .28rem 1.5rem;
   border-bottom: 1px solid var(--card-border);
   position: relative;
 }
 
-.goals-list li:last-child { border-bottom: none; }
+.goals-list .goals-list-item:last-child {
+  border-bottom: none;
+}
 
-.goals-list li::before {
+.goal-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.goal-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.goal-toggle::before {
   content: '☆';
   position: absolute;
   left: 0;
+  font-size: 1.12em;
+  line-height: 1.2;
   color: var(--accent);
-  opacity: .6;
+  opacity: 0.6;
+}
+
+.goal-toggle[aria-pressed="true"]::before {
+  content: '\2713';
+  font-size: 1.12em;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.goal-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.goal-toggle[aria-pressed="true"] + .goal-text {
+  text-decoration: line-through;
+  opacity: 0.78;
 }
 
 .month-actions {
@@ -264,4 +315,67 @@ main {
   padding: 3rem 1rem;
   color: var(--text-muted);
   font-size: .95rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard-page main {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 1.8rem 1.8rem 3.5rem;
+    box-sizing: border-box;
+  }
+
+  .dashboard-page #app {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .dashboard-page .month-card,
+  .dashboard-page .cta-card,
+  .dashboard-page .summary-strip {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  
+  .month-card .month-label {
+    padding: 0.5rem 0.5rem 0rem 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .section-label {
+    font-size: .73rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--text-muted);
+    margin: .7rem 0 .3rem;
+    padding: 0.5rem 0.5rem 0rem 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .goals-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: .18rem;
+    padding: 0rem 0.5rem 0.5rem 0.5rem;
+    box-sizing: border-box;
+  }
+  
+  .goals-list-item {
+    display: flex;
+    align-items: flex-start;
+    font-size: .93rem;
+    padding: 0rem 0 .28rem 0rem;
+    border-bottom: 1px solid var(--card-border);
+    position: relative;
+  }
+
+  .goal-text {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.5;
+  }
 }

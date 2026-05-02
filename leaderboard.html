@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Codystar:wght@300;400&family=Italiana&family=Major+Mono+Display&family=Moirai+One&family=Monoton&family=Mulish&display=swap" rel="stylesheet">
-  <title>2026 Accountability | Leaderboard</title>
+  <title>2026 Accountability - Leaderboard</title>
 </head>
 <body>
   <header><a href="index.html">2026 Accountability</a></header>
@@ -23,19 +23,23 @@
     <h1>Leaderboard</h1>
     <p id="last-updated">Fetching data...</p>
     <article>
-    <table class="leaderboard-fixed">
-      <caption>Leaderboard - Monthly Progress</caption>
-      <thead><tr><th>Name</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr></thead>
-      <tbody id="monthly-body"></tbody>
-    </table>
-</article>
-<article>
-  <table class="leaderboard-fixed">
-    <caption>Leaderboard - Quarterly Status</caption>
-    <thead><tr><th>Name</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr></thead>
-    <tbody id="quarterly-body"></tbody>
-  </table>
-</article>
+      <div class="leaderboard-scroll">
+        <table class="leaderboard-fixed">
+          <caption>Monthly Progress</caption>
+          <thead><tr><th>Name</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr></thead>
+          <tbody id="monthly-body"></tbody>
+        </table>
+      </div>
+    </article>
+    <article>
+      <div class="leaderboard-scroll">
+        <table class="leaderboard-fixed">
+          <caption>Quarterly Status</caption>
+          <thead><tr><th>Name</th><th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th><th>May</th><th>Jun</th><th>Jul</th><th>Aug</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th></tr></thead>
+          <tbody id="quarterly-body"></tbody>
+        </table>
+      </div>
+    </article>
 
   </main>
   <footer>© 2026 Casey Verde ☆ <a href="https://github.com/accountabilityy/funchal">Accountability</a> ☆ <a href="https://github.com/accountabilityy/diy">DIY</a></footer>
