@@ -15,19 +15,24 @@
     </header>
     <nav>
       <ul class="nav-ul nav-link">
-        <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover" href="march.html">Current Month</a></li>
-        <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover" href="q1.html">Current Quarter</a></li>
+        <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover active" href="index.html">Home</a></li>
         <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover" href="leaderboard.html">Leaderboard</a></li>
         <li class="nav-link nav-link-hover"><a class="nav-link nav-link-hover" href="dashboard.html">Dashboard</a></li>
       </ul>
     </nav>
     <main>
+      <section class="goals-form-cta-wrap" aria-label="This month's goals form">
+        <a id="month-goals-cta" class="button-theme button-theme-cta" href="#" target="_blank" rel="noopener noreferrer">
+          <span class="cta-line1">Goals Form</span>
+          <span class="cta-line2">Fill this out before the next meeting!</span>
+        </a>
+      </section>
       <article>
         <p>Welcome to 2026, the year you achieve all your goals!</p>
         <p>At least, that's the idea. But it can be hard to do great things all by yourself.</p>
         <p>The <span class="mulish-bold">2026 Accountability</span> group brings together ambitious people each month to hold ourselves accountable to our goals, and achieve success - together!</p>
       </article>
-       <article>
+      <article>
         <h2>How to Join</h2>
         <ol>
           <li>Fill out this month's form for your goals before Midnight on the day prior to the meeting</li>
@@ -72,5 +77,36 @@
 
     </main>
     <footer>© 2026 Casey Verde ☆ <a href="https://github.com/accountabilityy/funchal">Accountability</a> ☆ <a href="https://github.com/accountabilityy/diy">DIY</a></footer>
+    <script src="config.js"></script>
+    <script>
+      function getCurrentMonthConfig(months) {
+        const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        const parsed = (months || []).map(m => {
+          const match = String(m?.key || '').toLowerCase().match(/^([a-z]+)_(\d{4})$/);
+          const month = match ? monthNames.indexOf(match[1]) : -1;
+          return month < 0 ? null : { cfg: m, score: Number(match[2]) * 12 + month };
+        }).filter(Boolean).sort((a, b) => a.score - b.score);
+
+        if (!parsed.length) return null;
+
+        const now = new Date();
+        const target = new Date(now.getFullYear(), now.getMonth() + (now.getDate() >= 8 ? 1 : 0), 1);
+        const targetScore = target.getFullYear() * 12 + target.getMonth();
+        const chosen = parsed.find(p => p.score >= targetScore) || parsed[parsed.length - 1];
+        return chosen.cfg;
+      }
+
+      (function () {
+        const cfg = window.DASHBOARD_CONFIG;
+        if (!cfg || !cfg.months || !cfg.months.length) return;
+        const m = getCurrentMonthConfig(cfg.months) || cfg.months[cfg.months.length - 1];
+        const a = document.getElementById('month-goals-cta');
+        if (!a || !m || !m.formUrl) return;
+        const shortLabel = String(m.label || '').replace(/\s+\d{4}$/, '').trim() || m.label;
+        a.href = m.formUrl;
+        const line1 = a.querySelector('.cta-line1');
+        if (line1) line1.textContent = shortLabel + ' Goals Form';
+      })();
+    </script>
   </body>
 </html>
