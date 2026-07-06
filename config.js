@@ -2,8 +2,8 @@ window.DASHBOARD_CONFIG = {
   sheetId: '1AP3I7goYbi11Uz3WuxN2nQNLH0X5dkX33MciF6BiYQw',
 
   members: [
-    'Casey', 'Gudmundur', 'Ilse', 'Kasia',
-    'Laura', 'Sebastian', 'Vanessa', 'Abby', 'Ky', 'Marine'
+    'Casey', 'Gudmundur', 'Ilse', ,'Vanessa', 'Robert'
+    'Laura', 'Sebastian', , 'Abby', 'Kasia', 'Ky', 'Marine'
   ],
 
   // Optional aliases for inconsistent form submissions across months.
@@ -11,6 +11,7 @@ window.DASHBOARD_CONFIG = {
   memberAliases: {
     Laura: ['Laura O', 'Laura Otto'],
     Gudmundur: ['Gummi'],
+    Robert: ['Robert Schneider'],
   },
 
   // gid: Sheet tab numeric ID from URL ...#gid=XXXXXXX
