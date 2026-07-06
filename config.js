@@ -2,7 +2,7 @@ window.DASHBOARD_CONFIG = {
   sheetId: '1AP3I7goYbi11Uz3WuxN2nQNLH0X5dkX33MciF6BiYQw',
 
   members: [
-    'Casey', 'Gudmundur', 'Ilse', ,'Vanessa', 'Robert'
+    'Casey', 'Gudmundur', 'Ilse', ,'Vanessa', 'Robert',
     'Laura', 'Sebastian', , 'Abby', 'Kasia', 'Ky', 'Marine'
   ],
 
